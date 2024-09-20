@@ -3,12 +3,17 @@ using Silk.NET.Vulkan;
 
 namespace RenderWrapper.Resource;
 
-public sealed class Shader {
+public sealed class Shader : IDisposable {
     public readonly ShaderModule NativeShader;
+    private readonly Vk Vk;
+    private readonly VulkanDevice Device;
 
     public Shader(byte[] code, VulkanContext ctx) : this(code, ctx.Vk, ctx.Device) {}
 
     public Shader(byte[] code, Vk vk, VulkanDevice device) {
+        Vk = vk;
+        Device = device;
+        
         ShaderModuleCreateInfo createInfo = new() {
             SType = StructureType.ShaderModuleCreateInfo,
             CodeSize = (nuint)code.Length,
@@ -18,9 +23,15 @@ public sealed class Shader {
             fixed (byte* codePtr = code) {
                 createInfo.PCode = (uint*)codePtr;
 
-                if (vk!.CreateShaderModule(device.LogicalDevice, in createInfo, null, out NativeShader) != Result.Success)
+                if (Vk.CreateShaderModule(Device.LogicalDevice, in createInfo, null, out NativeShader) != Result.Success)
                     throw new Exception("Unable to create shader!");
             }
+        }
+    }
+
+    public void Dispose() {
+        unsafe {
+            Vk.DestroyShaderModule(Device.LogicalDevice, NativeShader, null);
         }
     }
 }

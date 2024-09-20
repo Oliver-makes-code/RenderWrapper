@@ -75,7 +75,7 @@ public sealed record VulkanSwapchain(
 
             var deviceImages = new DeviceImage.View[imageCount];
             for (int i = 0; i < imageCount; i++)
-                deviceImages[i] = new(new(swapchainImages[i], swapchainImageFormat), vk, device);
+                deviceImages[i] = new(new(swapchainImages[i], swapchainImageFormat, vk, device), vk, device);
 
             return new(khrSwapchainExt, swapchainKhr, deviceImages, swapchainExtent, swapchainSupport.Capabilities);
         }

@@ -3,25 +3,46 @@ using Silk.NET.Vulkan;
 
 namespace RenderWrapper.Resource;
 
-public sealed class DeviceImage {
+public sealed class DeviceImage : IDisposable {
     public readonly Image NativeImage;
-    public readonly Format NativeImageFormat;
+    public readonly Format Format;
+    private readonly Vk Vk;
+    private readonly VulkanDevice Device;
 
-    public DeviceImage(VulkanContext ctx)
-        => throw new NotImplementedException();
+    public DeviceImage(VulkanContext ctx, Format format, uint width, uint height, uint depth = 1, int arrayLayers = 1) {
+        Vk = ctx.Vk;
+        Device = ctx.Device;
 
-    public DeviceImage(Image nativeImage, Format nativeImageFormat) {
+        unsafe {
+            ImageCreateInfo info = new() {
+                Format = format,
+                Extent = new Extent3D(width, height, depth)
+            };
+            Vk.CreateImage(Device.LogicalDevice, &info, null, out NativeImage);
+        }
+        Format = format;
+    }
+
+    public DeviceImage(Image nativeImage, Format nativeImageFormat, Vk vk, VulkanDevice device) {
         NativeImage = nativeImage;
-        NativeImageFormat = nativeImageFormat;
+        Format = nativeImageFormat;
+        Vk = vk;
+        Device = device;
+    }
+
+    public void Dispose() {
+        unsafe {
+            Vk.DestroyImage(Device.LogicalDevice, NativeImage, null);
+        }
     }
 
     public static implicit operator Image (DeviceImage img)
         => img.NativeImage;
 
     public static implicit operator Format (DeviceImage img)
-        => img.NativeImageFormat;
+        => img.Format;
 
-    public sealed class View {
+    public sealed class View : IDisposable {
         public readonly ImageView NativeImageView;
         public readonly DeviceImage Image;
 
@@ -51,6 +72,12 @@ public sealed class DeviceImage {
 
             unsafe {
                 vk.CreateImageView(device.LogicalDevice, &createInfo, null, out NativeImageView);
+            }
+        }
+
+        public void Dispose() {
+            unsafe {
+                Image.Vk.DestroyImageView(Image.Device.LogicalDevice, NativeImageView, null);
             }
         }
     }
