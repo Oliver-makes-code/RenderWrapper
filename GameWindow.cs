@@ -9,7 +9,7 @@ public sealed class GameWindow {
     public readonly IWindow NativeWindow;
     public readonly VulkanContext VulkanContext;
 
-    public GameWindow(Action<double> render, Action<double> update, bool vsync = true, string appName = "Window", int updatesPerSecond = 20) {
+    public GameWindow(Action<GameWindow, double> render, Action<GameWindow, double> update, bool vsync = true, string appName = "Window", int updatesPerSecond = 20) {
         SdlWindowing.Use();
         
         var options = WindowOptions.DefaultVulkan with {
@@ -25,8 +25,8 @@ public sealed class GameWindow {
         if (NativeWindow.VkSurface is null)
             throw new Exception("Windowing platform doesn't support Vulkan");
 
-        NativeWindow.Render += render;
-        NativeWindow.Update += update;
+        NativeWindow.Render += delta => render(this, delta);
+        NativeWindow.Update += delta => update(this, delta);
 
         VulkanContext = new(NativeWindow, appName);
     }

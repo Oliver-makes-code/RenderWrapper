@@ -12,7 +12,8 @@ public sealed record VulkanQueues(Queue Graphics, Queue Present);
 public sealed record VulkanDevice(PhysicalDevice PhysicalDevice, Device LogicalDevice, VulkanDevice.QueueFamilies Families, ExtMeshShader MeshShaderExt) {
     private static readonly string[] DeviceExtensions = [
         KhrSwapchain.ExtensionName,
-        ExtMeshShader.ExtensionName
+        ExtMeshShader.ExtensionName,
+        "VK_KHR_vertex_attribute_divisor"
     ];
 
     public VulkanQueues GetQueues(Vk vk, VulkanSurface surface) {
@@ -49,7 +50,7 @@ public sealed record VulkanDevice(PhysicalDevice PhysicalDevice, Device LogicalD
             uniqueQueueFamilies = uniqueQueueFamilies.Distinct().ToArray();
 
             using var mem = GlobalMemory.Allocate(uniqueQueueFamilies.Length * sizeof(DeviceQueueCreateInfo));
-            var queueCreateInfos = (DeviceQueueCreateInfo*)Unsafe.AsPointer(ref mem.GetPinnableReference());
+            var queueCreateInfos = mem.AsPtr<DeviceQueueCreateInfo>();
 
             float queuePriority = 1.0f;
             for (int i = 0; i < uniqueQueueFamilies.Length; i++)

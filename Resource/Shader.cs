@@ -37,30 +37,34 @@ public sealed class Shader : IDisposable {
     }
 }
 
-public sealed record SpecializedShader(Shader Shader, ShaderStage Stage, string Entrypoint = "main") : IDisposable {
-    private PipelineShaderStageCreateInfo? info = null;
+public sealed class SpecializedShader(Shader Shader, ShaderStage Stage, string Entrypoint = "main") : IDisposable {
+    public readonly Shader Shader = Shader;
+    public readonly ShaderStage Stage = Stage;
+    public readonly string Entrypoint = Entrypoint;
 
-    public PipelineShaderStageCreateInfo GetCreateInfo() {
-        if (info == null) {
-            unsafe {
-                info = new() {
-                    SType = StructureType.PipelineShaderStageCreateInfo,
-                    Stage = Stage.ToFlags(),
-                    Module = Shader.NativeShader,
-                    PName = (byte*)SilkMarshal.StringToPtr(Entrypoint)
-                };
-            }
+    private unsafe PipelineShaderStageCreateInfo *info;
+
+    public void PopulateCreateInfo() {
+        unsafe {
+            if (info != null)
+                return;
+            info = Mem.Alloc<PipelineShaderStageCreateInfo>();
+            *info = new() {
+                SType = StructureType.PipelineShaderStageCreateInfo,
+                Stage = Stage.ToFlags(),
+                Module = Shader.NativeShader,
+                PName = (byte*)SilkMarshal.StringToPtr(Entrypoint)
+            };
         }
-
-        return info!.Value;
     }
 
     public void Dispose() {
-        if (info == null)
-            return;
-        
         unsafe {
-            SilkMarshal.FreeString((nint)info!.Value.PName);
+            if (info == null)
+                return;
+            
+            SilkMarshal.FreeString((nint)info->PName);
+            Mem.Free(info);
         }
     }
 }
