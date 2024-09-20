@@ -1,5 +1,6 @@
 using Silk.NET.Core.Contexts;
 using Silk.NET.Vulkan;
+using Silk.NET.Vulkan.Extensions.EXT;
 using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace RenderWrapper.Vulkan;

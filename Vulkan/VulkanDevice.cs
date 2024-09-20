@@ -9,7 +9,7 @@ namespace RenderWrapper.Vulkan;
 
 public sealed record VulkanQueues(Queue Graphics, Queue Present);
 
-public sealed record VulkanDevice(PhysicalDevice PhysicalDevice, Device LogicalDevice, VulkanDevice.QueueFamilies Families) {
+public sealed record VulkanDevice(PhysicalDevice PhysicalDevice, Device LogicalDevice, VulkanDevice.QueueFamilies Families, ExtMeshShader MeshShaderExt) {
     private static readonly string[] DeviceExtensions = [
         KhrSwapchain.ExtensionName,
         ExtMeshShader.ExtensionName
@@ -77,7 +77,10 @@ public sealed record VulkanDevice(PhysicalDevice PhysicalDevice, Device LogicalD
             if (vk.CreateDevice(physicalDevice, in createInfo, null, out var logicalDevice) != Result.Success)
                 throw new Exception("Failed to create logical device");
 
-            return new(physicalDevice, logicalDevice, indices);
+            if (!vk.TryGetDeviceExtension<ExtMeshShader>(vulkanInstance, logicalDevice, out var meshShaderExt))
+                throw new NotSupportedException("EXT_mesh_shader extension not found.");
+
+            return new(physicalDevice, logicalDevice, indices, meshShaderExt);
         }
     }
 
