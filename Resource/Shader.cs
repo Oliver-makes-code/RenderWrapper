@@ -1,4 +1,5 @@
 using RenderWrapper.Vulkan;
+using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 
 namespace RenderWrapper.Resource;
@@ -13,7 +14,7 @@ public sealed class Shader : IDisposable {
     public Shader(byte[] code, Vk vk, VulkanDevice device) {
         Vk = vk;
         Device = device;
-        
+
         ShaderModuleCreateInfo createInfo = new() {
             SType = StructureType.ShaderModuleCreateInfo,
             CodeSize = (nuint)code.Length,
@@ -36,7 +37,33 @@ public sealed class Shader : IDisposable {
     }
 }
 
-public sealed record SpecializedShader(Shader Shader, ShaderStage Stage, string Entrypoint = "main");
+public sealed record SpecializedShader(Shader Shader, ShaderStage Stage, string Entrypoint = "main") : IDisposable {
+    private PipelineShaderStageCreateInfo? info = null;
+
+    public PipelineShaderStageCreateInfo GetCreateInfo() {
+        if (info == null) {
+            unsafe {
+                info = new() {
+                    SType = StructureType.PipelineShaderStageCreateInfo,
+                    Stage = Stage.ToFlags(),
+                    Module = Shader.NativeShader,
+                    PName = (byte*)SilkMarshal.StringToPtr(Entrypoint)
+                };
+            }
+        }
+
+        return info!.Value;
+    }
+
+    public void Dispose() {
+        if (info == null)
+            return;
+        
+        unsafe {
+            SilkMarshal.FreeString((nint)info!.Value.PName);
+        }
+    }
+}
 
 public enum ShaderStage {
     Compute,
