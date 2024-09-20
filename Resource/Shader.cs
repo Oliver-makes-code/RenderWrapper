@@ -44,10 +44,8 @@ public sealed class SpecializedShader(Shader Shader, ShaderStage Stage, string E
 
     private unsafe PipelineShaderStageCreateInfo *info;
 
-    public void PopulateCreateInfo() {
-        unsafe {
-            if (info != null)
-                return;
+    public unsafe PipelineShaderStageCreateInfo *PopulateCreateInfo() {
+        if (info == null) {
             info = Mem.Alloc<PipelineShaderStageCreateInfo>();
             *info = new() {
                 SType = StructureType.PipelineShaderStageCreateInfo,
@@ -56,6 +54,8 @@ public sealed class SpecializedShader(Shader Shader, ShaderStage Stage, string E
                 PName = (byte*)SilkMarshal.StringToPtr(Entrypoint)
             };
         }
+            
+        return info;
     }
 
     public void Dispose() {

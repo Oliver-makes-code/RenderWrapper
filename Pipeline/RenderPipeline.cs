@@ -13,7 +13,7 @@ public sealed class RenderPipeline(
     private unsafe PipelineVertexInputStateCreateInfo *vertexInput;
     private unsafe PipelineInputAssemblyStateCreateInfo *inputAssembly;
 
-    public unsafe PipelineVertexInputStateCreateInfo *CreateVertexInput() {
+    public unsafe PipelineVertexInputStateCreateInfo *GetVertexInput() {
         if (vertexInput == null) {
             vertexInput = Mem.Alloc<PipelineVertexInputStateCreateInfo>();
 
@@ -27,7 +27,7 @@ public sealed class RenderPipeline(
         return vertexInput;
     }
 
-    public unsafe PipelineInputAssemblyStateCreateInfo *CreateInputAssembly() {
+    public unsafe PipelineInputAssemblyStateCreateInfo *GetInputAssembly() {
         if (inputAssembly == null) {
             inputAssembly = Mem.Alloc<PipelineInputAssemblyStateCreateInfo>();
 
